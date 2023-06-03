@@ -1,7 +1,0 @@
-LICENSE
-README.md
-setup.py
-general_data_converter.egg-info/PKG-INFO
-general_data_converter.egg-info/SOURCES.txt
-general_data_converter.egg-info/dependency_links.txt
-general_data_converter.egg-info/top_level.txt
