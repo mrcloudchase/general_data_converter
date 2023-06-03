@@ -1,0 +1,151 @@
+import argparse
+import os
+import pandas as pd
+
+# Create argument parser
+def create_parser():
+    # Create the parser
+    parser = argparse.ArgumentParser(prog='General Data Converter',
+                                     description='Convert data between different formats.',
+                                     epilog='Thank you for using the General Data Converter!')
+
+    # Add the arguments
+    parser.add_argument('--input-file',
+                        type=str,
+                        required=True,
+                        help='The path to the input file')
+
+    parser.add_argument('--output-dir',
+                        type=str,
+                        required=True,
+                        help='The directory where the output should be written')
+
+    parser.add_argument('--output-format',
+                        type=str,
+                        choices=['json', 'csv', 'xlsx'],
+                        required=True,
+                        help='The format of the output file')
+    parser.add_argument('--key',
+                        type=str,
+                        required=False,
+                        help='The key to sort by')
+    
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # # You can access the argument values like this:
+    # print(f"Input file: {args.input_file}")
+    # print(f"Output directory: {args.output_dir}")
+    # print(f"Output format: {args.output_format}")
+
+    # Return the arguments
+    return args
+
+# Validate input file argument
+def validate_input_file(input_file: str):
+    # Check if the input file exists
+    if not os.path.exists(input_file):
+        raise ValueError('Input file does not exist')
+
+    # Check if the input file is a file
+    if not os.path.isfile(input_file):
+        raise ValueError('Input file is not a file')
+
+    # Check if the input file has a supported extension
+    if os.path.splitext(input_file)[1][1:] not in ['json', 'csv', 'xlsx']:
+        raise ValueError('Unsupported input file format')
+    
+    # Return the input file
+    return input_file
+
+# Validate output directory argument
+def validate_output_dir(output_dir: str):
+    # Check if the output directory exists
+    if not os.path.exists(output_dir):
+        raise ValueError('Output directory does not exist')
+
+    # Check if the output directory is a directory
+    if not os.path.isdir(output_dir):
+        raise ValueError('Output directory is not a directory')
+
+    # Return the output directory
+    return output_dir
+
+# Validate output format argument
+def validate_output_format(output_format: str):
+    # Check if the output format is supported
+    if output_format not in ['json', 'csv', 'xlsx']:
+        raise ValueError('Unsupported output format')
+
+    # Return the output format
+    return output_format
+
+# Function to read data from xlsx file
+def read_xlsx(input_file: str):
+    # Read the input file
+    data = pd.ExcelFile(input_file)
+
+    # Return the data
+    return data
+
+# Function to create dataframes from xlsx file data
+def create_dataframes(data: pd.ExcelFile):
+    # Create a dictionary to store the dataframes
+    dataframes = {}
+
+    # Iterate over the sheets in the data
+    for sheet in data.sheet_names:
+        # Read the sheet
+        df = pd.read_excel(data, sheet)
+
+        # Add the sheet to the dictionary
+        dataframes[sheet] = df
+
+    # Return the dataframes
+    return dataframes
+
+# Function to write convert xlsx data to csv
+def write_csv(data: pd.DataFrame, output_file: str):
+    # Write the data to the output file
+    data.to_csv(output_file, index=False)
+
+# Function to write convert xlsx data to json
+def write_json(data: pd.DataFrame, output_file: str):
+    # Write the data to the output file
+    data.to_json(output_file, orient='records')
+
+# Main function
+def main():
+    # Create the parser
+    parser = create_parser()
+
+    # Validate the input file
+    input_file = validate_input_file(parser.input_file)
+
+    # Validate the output directory
+    output_dir = validate_output_dir(parser.output_dir)
+
+    # Validate the output format
+    output_format = validate_output_format(parser.output_format)
+
+    # Print the validated arguments
+    print(f"Input file: {input_file}")
+    print(f"Output directory: {output_dir}")
+    print(f"Output format: {output_format}\n")
+
+    # Read the input file
+    data = read_xlsx(input_file)
+
+    # Create dataframes from the input file data
+    dataframes = create_dataframes(data)
+
+    # Write the data to the output directory in the output format
+    for sheet, df in dataframes.items():
+        output_file = os.path.join(output_dir, f'{sheet}.{output_format}')
+        if output_format == 'csv':
+            write_csv(df, output_file)
+        elif output_format == 'json':
+            write_json(df, output_file)
+
+if __name__ == "__main__":
+    main()
